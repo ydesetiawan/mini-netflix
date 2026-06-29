@@ -1,0 +1,57 @@
+version: "3.9"
+
+# PostgreSQL runs locally — not in Docker.
+# Make sure your local Postgres has the mini_netflix database:
+#   createdb mini_netflix
+#   psql mini_netflix < migrations/sql/001_init.sql
+#   psql mini_netflix < migrations/sql/002_seed.sql
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: mini_netflix_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: mini_netflix_es
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: mini_netflix_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  redis_data:
+  es_data:
+  minio_data:
