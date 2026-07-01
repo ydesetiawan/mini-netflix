@@ -111,15 +111,17 @@ func (c *Client) IndexContent(ctx context.Context, doc map[string]any) error {
 	return err
 }
 
-// Autocomplete returns title suggestions using the completion suggester.
+// Autocomplete returns title suggestions using the edge_ngram title field.
+// This matches any prefix within the title (e.g. "av" matches "The Avengers").
 func (c *Client) Autocomplete(ctx context.Context, prefix string) ([]string, error) {
 	query := map[string]any{
-		"suggest": map[string]any{
-			"title_suggest": map[string]any{
-				"prefix": prefix,
-				"completion": map[string]any{
-					"field": "title_suggest",
-					"size":  10,
+		"size": 10,
+		"_source": []string{"title"},
+		"query": map[string]any{
+			"match": map[string]any{
+				"title": map[string]any{
+					"query":    prefix,
+					"analyzer": "standard",
 				},
 			},
 		},
@@ -132,21 +134,21 @@ func (c *Client) Autocomplete(ctx context.Context, prefix string) ([]string, err
 	}
 
 	var result struct {
-		Suggest map[string][]struct {
-			Options []struct {
-				Text string `json:"text"`
-			} `json:"options"`
-		} `json:"suggest"`
+		Hits struct {
+			Hits []struct {
+				Source struct {
+					Title string `json:"title"`
+				} `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, err
 	}
 
 	var suggestions []string
-	for _, opts := range result.Suggest["title_suggest"] {
-		for _, opt := range opts.Options {
-			suggestions = append(suggestions, opt.Text)
-		}
+	for _, h := range result.Hits.Hits {
+		suggestions = append(suggestions, h.Source.Title)
 	}
 	return suggestions, nil
 }

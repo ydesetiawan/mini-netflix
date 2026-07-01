@@ -1,0 +1,229 @@
+{
+  "info": {
+    "name": "Mini Netflix API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "content_id", "value": "a1b2c3d4-0001-0001-0001-000000000001" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('token', res.token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('token', res.token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "Create Content",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.id) { pm.collectionVariables.set('content_id', res.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/content",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"The Avengers\",\n  \"description\": \"Earth's mightiest heroes must come together to stop Loki.\",\n  \"type\": \"movie\",\n  \"release_year\": 2012,\n  \"duration_min\": 143,\n  \"thumbnail_url\": \"https://placeholder.co/300x450\",\n  \"video_url\": \"https://cdn.example.com/avengers.m3u8\",\n  \"genre_ids\": [1, 4]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Content by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/content/{{content_id}}"
+          }
+        },
+        {
+          "name": "Record Watch Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/content/{{content_id}}/watch",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"progress\": 300\n}"
+            }
+          }
+        },
+        {
+          "name": "Rate Content",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/content/{{content_id}}/rate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 9\n}"
+            }
+          }
+        },
+        {
+          "name": "Add to Watchlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/content/{{content_id}}/watchlist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Full-Text Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/search?q=avengers&page=0&size=10",
+              "query": [
+                { "key": "q", "value": "avengers" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Autocomplete",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/search/autocomplete?q=bre",
+              "query": [
+                { "key": "q", "value": "bre" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recommendations",
+      "item": [
+        {
+          "name": "Most Popular",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/recommendations/popular?limit=10",
+              "query": [
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Top Rated",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/recommendations/top-rated?limit=10",
+              "query": [
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get Watchlist",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/user/watchlist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/health"
+          }
+        }
+      ]
+    }
+  ]
+}

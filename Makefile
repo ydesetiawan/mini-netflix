@@ -1,4 +1,4 @@
-.PHONY: up down run build tidy seed-es lint
+.PHONY: up down run build tidy seed-es lint ui
 
 # Start all infrastructure (Postgres, Redis, ES, MinIO)
 up:
@@ -22,6 +22,11 @@ build:
 tidy:
 	go mod tidy
 
+# Run database migrations
+migrate:
+	psql -U netflix -d mini_netflix -f migrations/sql/001_init.sql
+	psql -U netflix -d mini_netflix -f migrations/sql/002_seed.sql
+
 # Seed Elasticsearch
 seed-es:
 	bash scripts/es_seed.sh
@@ -32,6 +37,12 @@ dev: up tidy seed-es run
 # Lint (requires golangci-lint)
 lint:
 	golangci-lint run ./...
+
+# Open UI tools in browser
+ui:
+	@echo "Opening UI tools..."
+	open http://localhost:5540   # RedisInsight
+	open http://localhost:5601   # Kibana
 
 # Show API routes summary
 routes:
